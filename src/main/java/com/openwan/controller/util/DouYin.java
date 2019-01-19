@@ -101,7 +101,7 @@ public class DouYin {
 		}
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) throws IOException {
 		
 		
 		String json = sendGet("https://www.iesdouyin.com/share/video/6604043815181372679/?region=CN&mid=6575353762485897998&u_code=3ddmjfe8&titleType=title&timestamp=1537693813&utm_campaign=client_share&app=aweme&utm_medium=ios&tt_from=copy&utm_source=copy&iid=44478516381");
@@ -146,7 +146,7 @@ public class DouYin {
  
 	
 	//地址重定向
-	public static String getRedirectInfo(String url) throws  Exception{
+	public static String getRedirectInfo(String url) throws IOException, CloneNotSupportedException {
 		String result = null ;
 		HttpHost targetHost = null ;
 		HttpClient httpClient = new DefaultHttpClient();

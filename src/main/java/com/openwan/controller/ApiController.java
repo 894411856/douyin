@@ -5,13 +5,16 @@ import com.openwan.controller.util.DouYin;
 import com.openwan.model.DouYinUrl;
 import com.openwan.service.DouYinService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
@@ -24,25 +27,74 @@ import java.util.HashMap;
  */
 @RestController
 @RequestMapping(value = "/api")
-public class CityController {
+public class ApiController {
 
 	@Autowired
 	private DouYinService douYinService;
 
  	private static Gson g = new Gson();
 
-	@RequestMapping("/")
-	public ModelAndView home(HttpServletResponse response) throws IOException{
-		return new ModelAndView("index");
+ 	/**
+	 * 抖音小视频
+	 * */
+	@ResponseBody
+	@RequestMapping("/dy")
+	public String reqInfo(String u , HttpServletRequest request) {
+		String ip  = getIpAddr(request) ;
+		System.out.println("IP地址："+ip);
+		System.out.println("解析地址"+u);
+		String json ="";
+		try {
+			String url = DouYin.getRedirectInfo(u);
+			String api =  "https://api.berryapi.net/get/video?AppKey=RGro8tBg1l&url="; // berryAPI 接口
+			System.out.println("api转接口地址："+api);
+			json = DouYin.sendGet(api + url);
+			System.out.println("解析结果："+json.replace("'\'",""));
+			DouYinUrl dyu = new DouYinUrl();
+			dyu.setIp(ip);
+			dyu.setStatus("1");
+			dyu.setUrl(u);
+			SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
+			dyu.setDateTime(sdf.format(new Date()));
+			douYinService.insertEmailCode(dyu);
+			} catch (IOException e) {
+				System.out.println("地址解析异常");
+			} catch (CloneNotSupportedException e) {
+			//e.printStackTrace();
+		}
+		return json ;
 	}
-	@RequestMapping("/test")
-	public ModelAndView test(HttpServletResponse response) throws IOException{
-		return new ModelAndView("test");
+
+
+
+	/**
+	 * 麻子平台
+	 * */
+	@ResponseBody
+	@RequestMapping("/op")
+	public String hs(String u ,String t , HttpServletRequest request) {
+		String json = "";
+		if("".equals(t) || "".equals(u)){
+			return "参数有误";
+		}
+		if("hs".equals(t)){
+			json = resultJsonStr(u,"jx_hs","2",request);
+		}
+		if("ws".equals(t)){
+			json = resultJsonStr(u,"jx_ws","3",request);
+		}
+		if("mp".equals(t)){
+			json = resultJsonStr(u,"jx_mp","4",request);
+		}
+		if("ks".equals(t)){
+			json = resultJsonStr(u,"ks","5",request);
+		}
+		return json ;
 	}
-	@RequestMapping("/v")
-	public String dow(HttpServletResponse response) throws IOException{
-		return "hello world";
-	}
+
+
+
+
 
 	@RequestMapping(value = "/dows", method = {RequestMethod.POST,RequestMethod.GET})
 	public void resq( String url ,  String name,HttpServletRequest request, HttpServletResponse response) throws IOException{
@@ -51,37 +103,35 @@ public class CityController {
 		downloadFile(url,name,request,response);
 	}
 
-	@ResponseBody
-	@RequestMapping("/reqInfo")
-	public String reqInfo(String u , HttpServletRequest request) {
+	/**
+	 *
+	 * 麻子平台接口
+	 * */
+	private String resultJsonStr(String u ,String type,String flg ,HttpServletRequest request){
 		String ip  = getIpAddr(request) ;
 		System.out.println("IP地址："+ip);
 		System.out.println("解析地址"+u);
-
+		String json ="";
 		try {
-			String url = DouYin.getRedirectInfo(u);
-			String api =  "https://api.berryapi.net/get/video?AppKey=RGro8tBg1l&url="; // berryAPI 接口
+			//String url = DouYin.getRedirectInfo(u);
+			String api =  "https://api.xuwenhui.xin/api/"+type+"?url="; // 麻子平台 接口
 			System.out.println("api转接口地址："+api);
-			String json = DouYin.sendGet(api + url);
-
+			json = DouYin.sendGet(api +u);
 			//getNopin(json,fileName,imageTitile);
-			System.out.println("解析结果："+json);
-
+			System.out.println("解析结果："+json.replace("'\'",""));
 			DouYinUrl dyu = new DouYinUrl();
 			dyu.setIp(ip);
+			dyu.setStatus(flg);
 			dyu.setUrl(u);
-			SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
+			SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
 			dyu.setDateTime(sdf.format(new Date()));
 			douYinService.insertEmailCode(dyu);
-
-			return json ;
 		} catch (Exception e) {
-			e.printStackTrace();
-			return "";
+			//e.printStackTrace();
 		}
-
+		return json;
 	}
-	
+
 
 	/*
 	* 单无水印视频
@@ -154,7 +204,7 @@ public class CityController {
 			}else if (".jpg".equals(name.substring(name.indexOf("."),name.length()))){
 				response.setContentType("image/x-citrix-jpeg;");
 			}
-			response.addHeader("Content-Disposition", "attachment;filename="+name);
+			response.addHeader("Content-Disposition", "attachment;filename="+new String(name.getBytes(),"iso-8859-1"));
 			response.setHeader("Pragma", "no-cache");
 			response.setHeader("Cache-Control", "no-cache");
 			response.setDateHeader("Expires", 0);

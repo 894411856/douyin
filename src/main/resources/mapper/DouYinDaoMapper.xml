@@ -5,8 +5,8 @@
 <mapper namespace="com.openwan.dao.DouYinDao">
 	
     <insert id="insertEmail"   parameterType="com.openwan.model.DouYinUrl" >
-        insert into douyin (  url,ip ,datetime)
-				values( #{url},#{ip},#{dateTime})
+        insert into douyin (  url,ip,status ,datetime)
+				values( #{url},#{ip},#{status},#{dateTime})
      
   	</insert>  
   	

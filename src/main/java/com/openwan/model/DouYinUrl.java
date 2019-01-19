@@ -6,6 +6,7 @@ public class DouYinUrl implements Serializable {
 
     private String url ;
     private String ip;
+    private String status;
     private String dateTime;
 
     public String getUrl() {
@@ -14,6 +15,14 @@ public class DouYinUrl implements Serializable {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public String getIp() {
