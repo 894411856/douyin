@@ -34,6 +34,13 @@ public class ApiController {
 
  	private static Gson g = new Gson();
 
+	@ResponseBody
+	@RequestMapping("/ok")
+	public String ok(){
+	   return "ok";
+	}
+	
+	
  	/**
 	 * 抖音小视频
 	 * */
